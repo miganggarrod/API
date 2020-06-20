@@ -35,9 +35,16 @@ const opciones: IDropdownOption[] = [
 
 const stackTokens: IStackTokens = { childrenGap: 40 };
 export interface IthirdpartyState {
+  Idioma: string;
   Topicos: Topico[];
   Indicadores: Indicador[];
   Paises: Pais[];
+  PaginaTopicos: number;
+  PaginaIndicadores: number;
+  PaginaPaises: number;
+  PaginasIndicadores:number;
+  PaginasPaises: number;
+
 }
 const estilosLabel: Partial<IStyleSet<ILabelStyles>> = {
   root: { marginTop: 10 },
@@ -64,9 +71,15 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
       { key: 'column3', name: 'Capital', fieldName: 'capitalCity', minWidth: 100, maxWidth: 200, isResizable: true },
     ];
     this.state = {
+      Idioma:'es',
       Topicos: [],
       Indicadores: [],
       Paises: [],
+      PaginaTopicos: 1,
+      PaginaIndicadores: 1,
+      PaginaPaises: 1,
+      PaginasIndicadores:1,
+      PaginasPaises: 1,
     };
   }
   public render(): React.ReactElement<IApiProps> {
@@ -97,6 +110,9 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
           </PivotItem>
           <PivotItem headerText="Indicadores">
             {/* <Label styles={estilosLabel}>Pivot #2</Label> */}
+            <Pagination currentPage={this.state.PaginaIndicadores}
+              totalPages={this.state.PaginasIndicadores}
+              onChange={(page) => this._getPageIndicadores(page)}/>
             <DetailsList
               items={this.state.Indicadores}
               columns={this.columnasIndicadores}
@@ -104,9 +120,9 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
           </PivotItem>
           <PivotItem headerText="Paises">
             {/* <Label styles={estilosLabel}>Pivot #3</Label> */}
-            <Pagination currentPage={3}
-              totalPages={13}
-              onChange={(page) => this._getPage(page)}></Pagination>
+            <Pagination currentPage={this.state.PaginaPaises}
+              totalPages={this.state.PaginasPaises}
+              onChange={(page) => this._getPagePaises(page)}/>
             <DetailsList
               items={this.state.Paises}
               columns={this.columnasPaises}
@@ -118,8 +134,15 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
     );
   }
 
-  private _getPage(page: number) {
-    console.log('Page:', page);
+  private _getPagePaises(page: number) {
+    // console.log('Page:', page);
+    this.setState({PaginaPaises:page});
+    this._CambiarPaises(this.state.Idioma, page);
+  }
+  private _getPageIndicadores(page: number) {
+    // console.log('Page:', page);
+    this.setState({PaginaIndicadores:page});
+    this._CambiarIndicadores(this.state.Idioma, page);
   }
   // https://jsonplaceholder.typicode.com/photos
   private _getApi(url: string): Promise<any> {
@@ -135,19 +158,20 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
   }
 
   public componentDidMount() {
-    this._CambiarTopicos('es');
-    this._CambiarIndicadores('es');
-    this._CambiarPaises('es');
+    this._CambiarTopicos('es', 1);
+    this._CambiarIndicadores('es', 1);
+    this._CambiarPaises('es', 1);
   }
 
   private _alcambiarIdioma = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
-    this._CambiarTopicos(option.key.toString());
-    this._CambiarIndicadores(option.key.toString());
-    this._CambiarPaises(option.key.toString());
+    this.setState({Idioma:option.key.toString()})
+    this._CambiarTopicos(option.key.toString(), this.state.PaginaTopicos);
+    this._CambiarIndicadores(option.key.toString(), this.state.PaginaIndicadores);
+    this._CambiarPaises(option.key.toString(), this.state.PaginaPaises);
   }
-  private _CambiarTopicos(idioma: string) {
+  private _CambiarTopicos(idioma: string, pagina: number) {
     let topicos: ITopico[] = [];
-    this._getApi('https://api.worldbank.org/v2/' + idioma + '/topic?format=json').then((resultados: any[]) => {
+    this._getApi('https://api.worldbank.org/v2/' + idioma + '/topic?page=' + pagina + '&format=json').then((resultados: any[]) => {
       resultados[1].forEach(resultado => {
         topicos.push({
           id: resultado.id,
@@ -160,9 +184,9 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
     });
   }
 
-  private _CambiarIndicadores(idioma: string) {
+  private _CambiarIndicadores(idioma: string, pagina: number) {
     let indicadores: IIndicador[] = [];
-    this._getApi('https://api.worldbank.org/v2/' + idioma + '/indicator?format=json').then((resultados: any[]) => {
+    this._getApi('https://api.worldbank.org/v2/' + idioma + '/indicator?page=' + pagina + '&format=json').then((resultados: any[]) => {
       resultados[1].forEach(resultado => {
         indicadores.push({
           id: resultado.id,
@@ -172,12 +196,12 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
         });
 
       });
-      this.setState({ Indicadores: indicadores });
+      this.setState({ Indicadores: indicadores,PaginasIndicadores:resultados[0].pages});
     });
   }
-  private _CambiarPaises(idioma: string) {
+  private _CambiarPaises(idioma: string, pagina: number) {
     let paises: IPais[] = [];
-    this._getApi('https://api.worldbank.org/v2/' + idioma + '/country?format=json').then((resultados: any[]) => {
+    this._getApi('https://api.worldbank.org/v2/' + idioma + '/country?page=' + pagina + '&format=json').then((resultados: any[]) => {
       resultados[1].forEach(resultado => {
         paises.push({
           id: resultado.id,
@@ -186,7 +210,7 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
         });
 
       });
-      this.setState({ Paises: paises });
+      this.setState({ Paises: paises, PaginasPaises: resultados[0].pages });
     });
   }
 }
