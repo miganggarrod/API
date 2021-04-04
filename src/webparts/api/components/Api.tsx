@@ -164,7 +164,7 @@ export default class Api extends React.Component<IApiProps, IthirdpartyState> {
   }
 
   private _alcambiarIdioma = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
-    this.setState({Idioma:option.key.toString()})
+    this.setState({Idioma:option.key.toString()});
     this._CambiarTopicos(option.key.toString(), this.state.PaginaTopicos);
     this._CambiarIndicadores(option.key.toString(), this.state.PaginaIndicadores);
     this._CambiarPaises(option.key.toString(), this.state.PaginaPaises);
